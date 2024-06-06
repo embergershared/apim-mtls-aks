@@ -11,7 +11,7 @@
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/CN=whoami-ing.ebdemos.info/O=apim-mtls-aks repo"
 
 # Create the Kubernetes TLS secret
-kubectl create secret tls self-tls --key server.key --cert server.crt
+kubectl create secret **tls** self-tls --key server.key --cert server.crt -n whoami
 ```
 
 ### Create Ingress
@@ -21,7 +21,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: test-localhost
-  namespace: default
+  namespace: whoami
 spec:
   ingressClassName: nginx
   rules:
@@ -54,17 +54,12 @@ curl -k -v https://whoami-ing.ebdemos.info/
 ### Add a CA in the loop
 
 ```pwsh
-# Create a CA self-signed certificate
+# Step 1: Create a CA (Certification Authority) self-signed certificate
+# Create a CA (Certification Authority) self-signed certificate
 openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 356 -nodes -subj '/CN=The Cert Authority'
 
-# Create the Kubernetes Generic secret for the CA
-kubectl create secret generic ca-secret --from-file=ca.crt=ca.crt
-
-# Create a CSR for the client
-openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj '/CN=The mTLS Client'
-
-# Sign the CSR with the CA to create the certificate
-openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt
+# Create the Kubernetes Generic secret for the CA that will be used by the Ingress to authenticate the client
+kubectl create secret **generic** ca-secret --from-file=ca.crt=ca.crt -n whoami
 ```
 
 ### Enable mTLS in the Ingress
@@ -74,12 +69,22 @@ openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
-    nginx.ingress.kubernetes.io/auth-tls-secret: default/ca-secret
+    nginx.ingress.kubernetes.io/auth-tls-secret: whoami/ca-secret
     nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
     nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
 ```
 
-### Test the mTLS
+### Setup the mTLS authentication on the client
+
+```pwsh
+# Create a client certificate signed by the CA
+
+## Create a CSR for the client (APIM backend here)
+openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj '/CN=The mTLS Client'
+
+## Sign the CSR with the CA to create the certificate
+openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt
+```
 
 ```pwsh
 # Query from client (curl) without the client certificate
@@ -94,9 +99,21 @@ curl -k -v https://whoami-ing.ebdemos.info/ --key client.key --cert client.crt
 
 ### Use APIM
 
-Generate the PFX for the client cert
+APIM can manage directly:
 
+- a Key Vault certificate:
+  - Create a secret in the Key Vault
+  - Create a certificate in APIM
+  - Import the certificate from the Key Vault
+
+- a custom certificate:
+  - Generate the PFX for the client cert with a password
 `openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt` # apim
+  - import the PFX file and enter the password in APIM
+
+
+Set the APIM backend to use the client certificate
+
 
 
 ### Use the wildcard TLS certificate
