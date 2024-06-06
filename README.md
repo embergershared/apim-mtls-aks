@@ -48,6 +48,7 @@ curl -k -v https://whoami-ing.ebdemos.info/
 ```
 
 > `-k` to skip self-signed certificate verification
+>
 > `-v` to see connection logs
 
 ### Add a CA in the loop
