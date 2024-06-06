@@ -9,6 +9,8 @@
 **/*.pem
 **/*.key
 **/*.pfx
+**/*.crt
+!**/*trunked.crt
 
 # ARM Subscriptions secrets
 **/*_secret.json

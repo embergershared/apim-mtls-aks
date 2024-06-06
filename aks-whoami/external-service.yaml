@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: the-external-svc
+  namespace: whoami
+spec:
+  type: ExternalName
+  # externalName: whoami-svc-clusip.whoami.svc.cluster.local
+  externalName: azure-vote-front-svc-clusip.azure-vote.svc.cluster.local
+  # externalName: hello-aks-svc-clusip.hello-aks.svc.cluster.local
+  # externalName: httpbin-svc-clusip.httpbin.svc.cluster.local
+  # externalName: listener-svc.bases-jet.svc.cluster.local

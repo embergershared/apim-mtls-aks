@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: whoami-mtls-ing
+    namespace: whoami
+    annotations:
+      nginx.ingress.kubernetes.io/auth-tls-verify-client: "on" # Turn ON/OFF mTLS verification. When ON getting a HTTP 400 if wrong cert
+      nginx.ingress.kubernetes.io/auth-tls-secret: whoami/ca-secret
+      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "false" # To send the SSL client cert back to the client
+      # nginx.ingress.kubernetes.io/whitelist-source-range: IP # APIM public IP. When ON and from another IP, getting a HTTP 403
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  tls:
+  - hosts:
+      - whoami-ing.ebdemos.info
+    secretName: wildcard-ebdemos-info
+    # secretName: self-tls
+  rules:
+  - host: whoami-ing.ebdemos.info
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: the-external-svc
+            port:
+              number: 80
