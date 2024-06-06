@@ -47,7 +47,8 @@ spec:
 curl -k -v https://whoami-ing.ebdemos.info/
 ```
 
-> `-k` is used to skip self-signed certificate verification and `-v` to see some logs
+> `-k` to skip self-signed certificate verification
+> `-v` to see connection logs
 
 ### Add a CA in the loop
 
