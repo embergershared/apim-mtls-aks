@@ -68,10 +68,10 @@ kubectl create secret **generic** ca-secret --from-file=ca.crt=ca.crt -n whoami
 # Add these 4 annotations to the Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
-    nginx.ingress.kubernetes.io/auth-tls-secret: whoami/ca-secret
-    nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      nginx.ingress.kubernetes.io/auth-tls-verify-client: "on" # Turns ON/OFF mTLS verification. When ON getting a HTTP 400 for wrong client cert
+      nginx.ingress.kubernetes.io/auth-tls-secret: whoami/ca-secret
+      nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
+      nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "false" # To send the SSL client cert back to the client
 ```
 
 ### Setup the mTLS authentication on the client
@@ -111,21 +111,18 @@ APIM can manage directly:
 `openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt` # apim
   - import the PFX file and enter the password in APIM
 
-
 Set the APIM backend to use the client certificate
-
 
 
 ### Use the wildcard TLS certificate
 
 ```pwsh
-$CertFolder = "D:\Dropbox\0.CertsTLS\ebdemos.info\extended_wildcard_ebdemos_info"
-$CaCertPath = "$CertFolder\DigiCertCA.crt"
-$TlsCertPath = "$CertFolder\extended_wildcard_ebdemos_info.crt"
-$TlsPrivKeyPath = "$CertFolder\extended_wildcard_ebdemos_info.privkey"
+$CertFolder = "<a dir>"
+$TlsCertPath = "$CertFolder\cert.crt"
+$TlsPrivKeyPath = "$CertFolder\cert.key"
 
 # Create the Kubernetes secret for the wildcard certificate
-kubectl create secret tls wildcard-ebdemos-info --cert="$TlsCertPath" --key="$TlsPrivKeyPath"
+kubectl create secret tls wildcard-tls --cert="$TlsCertPath" --key="$TlsPrivKeyPath"
 ```
 
 Change the Ingress to use the wildcard certificate
@@ -136,13 +133,9 @@ spec:
   tls:
   - hosts:
       - whoami-ing.ebdemos.info
-    secretName: wildcard-ebdemos-info
+    secretName: wildcard-tls
     # secretName: self-tls
 ```
-
-
-
-
 
 ## Articles
 
