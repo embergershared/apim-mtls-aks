@@ -117,10 +117,10 @@ curl -k -v https://whoami-ing.ebdemos.info/ --key client.key --cert client.crt
 
       2. Add a custom certificate directly in API Management:
 
-        - Generate the PFX for the client cert with a password
+        Generate the PFX for the client cert with a password
 
       ```bash
-      openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt` # Requires to create a password
+      openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt # Requires to create a password
       ```
 
         - import the PFX file and enter the password in APIM
