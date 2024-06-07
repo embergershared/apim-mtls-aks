@@ -107,45 +107,28 @@ curl -v -k https://whoami-ing.ebdemos.info
 curl -k -v https://whoami-ing.ebdemos.info/ --key client.key --cert client.crt
 ```
 
-### Use APIM
+## Use APIM
 
-APIM can manage directly:
+APIM can manage Certificates directly in 2 ways:
 
-- a Key Vault certificate:
-  - Create a secret in the Key Vault
-  - Create a certificate in APIM
-  - Import the certificate from the Key Vault
+1. a Key Vault certificate:
 
-- a custom certificate:
-  - Generate the PFX for the client cert with a password
-`openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt` # apim
-  - import the PFX file and enter the password in APIM
+   - Create a secret in the Key Vault
+   - Create a certificate in APIM
+   - Import the certificate from the Key Vault
+
+2. a custom certificate:
+
+   - Generate the PFX for the client cert with a password
+
+```bash
+openssl pkcs12 -export -out client.pfx -inkey client.key -in client.crt` # Requires to create a password
+```
+
+   - import the PFX file and enter the password in APIM
 
 Set the APIM backend to use the client certificate
 
-
-### Use the wildcard TLS certificate
-
-```pwsh
-$CertFolder = "<a dir>"
-$TlsCertPath = "$CertFolder\cert.crt"
-$TlsPrivKeyPath = "$CertFolder\cert.key"
-
-# Create the Kubernetes secret for the wildcard certificate
-kubectl create secret tls wildcard-tls --cert="$TlsCertPath" --key="$TlsPrivKeyPath"
-```
-
-Change the Ingress to use the wildcard certificate
-
-```yaml
-spec:
-  ingressClassName: webapprouting.kubernetes.azure.com
-  tls:
-  - hosts:
-      - whoami-ing.ebdemos.info
-    secretName: wildcard-tls
-    # secretName: self-tls
-```
 
 ## Articles
 
