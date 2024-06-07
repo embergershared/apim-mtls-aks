@@ -2,16 +2,20 @@
 
 
 
-## Steps
+## Setup TLS
 
-### Create Self-signed certificate
+### Create a Self-signed certificate for TLS and its Kubernetes secret
+
+```pwsh
+
+> Note: The clients should "skip" the certificate verification as it is self-signed
 
 ```pwsh
 # Create a self-signed certificate
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/CN=whoami-ing.ebdemos.info/O=apim-mtls-aks repo"
 
 # Create the Kubernetes TLS secret
-kubectl create secret **tls** self-tls --key server.key --cert server.crt -n whoami
+kubectl create secret tls self-tls --key server.key --cert server.crt -n whoami
 ```
 
 ### Create Ingress
@@ -51,7 +55,9 @@ curl -k -v https://whoami-ing.ebdemos.info/
 >
 > `-v` to see connection logs
 
-### Add a CA in the loop
+## Add mTLS authentication, on top of TLS
+
+### Create a CA that will sign clients certificates and be known by the ingress controller
 
 ```pwsh
 # Step 1: Create a CA (Certification Authority) self-signed certificate
@@ -59,7 +65,7 @@ curl -k -v https://whoami-ing.ebdemos.info/
 openssl req -x509 -sha256 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 356 -nodes -subj '/CN=The Cert Authority'
 
 # Create the Kubernetes Generic secret for the CA that will be used by the Ingress to authenticate the client
-kubectl create secret **generic** ca-secret --from-file=ca.crt=ca.crt -n whoami
+kubectl create secret generic ca-secret --from-file=ca.crt=ca.crt -n whoami
 ```
 
 ### Enable mTLS in the Ingress
@@ -74,7 +80,9 @@ metadata:
       nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "false" # To send the SSL client cert back to the client
 ```
 
-### Setup the mTLS authentication on the client
+## Setup the mTLS authentication on the client
+
+### Create the client certificate
 
 ```pwsh
 # Create a client certificate signed by the CA
@@ -85,6 +93,8 @@ openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -sub
 ## Sign the CSR with the CA to create the certificate
 openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt
 ```
+
+### Use the client certificate in the client
 
 ```pwsh
 # Query from client (curl) without the client certificate
