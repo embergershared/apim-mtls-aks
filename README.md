@@ -90,7 +90,7 @@ metadata:
 ## Create a CSR for the client (APIM backend here)
 openssl req -new -newkey rsa:4096 -keyout client.key -out client.csr -nodes -subj '/CN=The mTLS Client'
 
-## Sign the CSR with the CA to create the certificate
+## Sign the CSR with the CA to create the client certificate
 openssl x509 -req -sha256 -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 02 -out client.crt
 ```
 
@@ -111,13 +111,9 @@ curl -k -v https://whoami-ing.ebdemos.info/ --key client.key --cert client.crt
 
 APIM can manage Certificates directly in 2 ways:
 
-1. a Key Vault certificate:
+1. Reference a certificate in Key Vault
 
-   - Create a secret in the Key Vault
-   - Create a certificate in APIM
-   - Import the certificate from the Key Vault
-
-2. a custom certificate:
+2. Add a custom certificate directly in API Management:
 
    - Generate the PFX for the client cert with a password
 
@@ -128,7 +124,6 @@ APIM can manage Certificates directly in 2 ways:
    - import the PFX file and enter the password in APIM
 
 Set the APIM backend to use the client certificate
-
 
 ## Articles
 
